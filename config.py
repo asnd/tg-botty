@@ -10,9 +10,7 @@ class Settings(BaseSettings):
     default_schedule_times: str = "09:00,20:00"
 
     model_config = SettingsConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8",
-        case_sensitive=False
+        env_file=".env", env_file_encoding="utf-8", case_sensitive=False
     )
 
     def get_schedule_times(self) -> list[str]:

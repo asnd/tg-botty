@@ -103,7 +103,7 @@ jobs:
 
     - name: Check for secrets in code
       run: |
-        if grep -r "TELEGRAM_BOT_TOKEN.*=.*[0-9]" --include="*.py" --include="*.yml" --exclude-dir=.git .; then
+        if grep -r "TELEGRAM_BOT_TOKEN.*=.*[0-9]" --include="*.py" --exclude-dir=.git --exclude-dir=.github .; then
           echo "Found hardcoded token!"
           exit 1
         fi

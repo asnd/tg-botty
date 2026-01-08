@@ -29,7 +29,9 @@ def get_user_streak(user_id: int) -> int:
     current_date = today
 
     for (response_date,) in response_dates:
-        if response_date == current_date or response_date == current_date - timedelta(days=1):
+        if response_date == current_date or response_date == current_date - timedelta(
+            days=1
+        ):
             streak += 1
             current_date = response_date - timedelta(days=1)
         else:
@@ -80,7 +82,7 @@ def get_mood_trend(user_id: int, days: int = 7) -> str:
         .filter(
             Response.user_id == user_id,
             Response.responded_at >= cutoff_date,
-            Question.category == "mood"
+            Question.category == "mood",
         )
         .all()
     )
@@ -126,7 +128,7 @@ def get_category_insights(user_id: int, category: str, days: int = 30) -> dict:
         .filter(
             Response.user_id == user_id,
             Response.responded_at >= cutoff_date,
-            Question.category == category
+            Question.category == category,
         )
         .all()
     )
@@ -139,8 +141,12 @@ def get_category_insights(user_id: int, category: str, days: int = 30) -> dict:
     answer_counts = Counter(answer for answer, _ in responses)
 
     # Calculate yes/no ratio
-    yes_count = sum(count for answer, count in answer_counts.items() if "yes" in answer.lower())
-    no_count = sum(count for answer, count in answer_counts.items() if "no" in answer.lower())
+    yes_count = sum(
+        count for answer, count in answer_counts.items() if "yes" in answer.lower()
+    )
+    no_count = sum(
+        count for answer, count in answer_counts.items() if "no" in answer.lower()
+    )
 
     total = yes_count + no_count
     yes_percentage = (yes_count / total * 100) if total > 0 else 0
@@ -193,7 +199,7 @@ def get_monthly_report(user_id: int) -> dict:
             .filter(
                 Response.user_id == user_id,
                 Response.responded_at >= month_ago,
-                Question.category == category
+                Question.category == category,
             )
             .count()
         )
@@ -215,9 +221,7 @@ def get_best_time_analysis(user_id: int) -> dict:
     session = get_session()
 
     responses = (
-        session.query(Response.responded_at)
-        .filter(Response.user_id == user_id)
-        .all()
+        session.query(Response.responded_at).filter(Response.user_id == user_id).all()
     )
 
     if not responses:
@@ -233,8 +237,6 @@ def get_best_time_analysis(user_id: int) -> dict:
     session.close()
 
     return {
-        "most_active_times": [
-            f"{hour:02d}:00" for hour, _ in most_active_hours
-        ],
+        "most_active_times": [f"{hour:02d}:00" for hour, _ in most_active_hours],
         "total_sessions": len(responses),
     }

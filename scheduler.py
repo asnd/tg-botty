@@ -61,10 +61,12 @@ class JournalScheduler:
                 trigger=CronTrigger(hour=hour, minute=minute, timezone=tz),
                 args=[telegram_id],
                 id=job_id,
-                replace_existing=True
+                replace_existing=True,
             )
 
-            logger.info(f"Added schedule for user {telegram_id} at {time_str} ({timezone_str})")
+            logger.info(
+                f"Added schedule for user {telegram_id} at {time_str} ({timezone_str})"
+            )
 
         except Exception as e:
             logger.error(f"Error adding job for user {telegram_id}: {e}")
@@ -86,9 +88,7 @@ class JournalScheduler:
             )
 
             await self.bot.send_message(
-                chat_id=telegram_id,
-                text=message,
-                parse_mode="Markdown"
+                chat_id=telegram_id, text=message, parse_mode="Markdown"
             )
 
             logger.info(f"Sent journal prompt to user {telegram_id}")
@@ -117,11 +117,7 @@ def add_user_schedule(telegram_id: int, times: list[str], timezone_str: str = No
 
     # Add new schedules
     for time_str in times:
-        schedule = Schedule(
-            user_id=user.id,
-            time=time_str,
-            is_enabled=True
-        )
+        schedule = Schedule(user_id=user.id, time=time_str, is_enabled=True)
         session.add(schedule)
 
     session.commit()
@@ -141,7 +137,9 @@ def remove_user_schedule(telegram_id: int, time_str: str = None):
 
     if time_str:
         # Remove specific time
-        schedule = session.query(Schedule).filter_by(user_id=user.id, time=time_str).first()
+        schedule = (
+            session.query(Schedule).filter_by(user_id=user.id, time=time_str).first()
+        )
         if schedule:
             session.delete(schedule)
     else:
@@ -164,10 +162,7 @@ def get_user_schedules(telegram_id: int) -> list[dict]:
         session.close()
         return []
 
-    schedules = [
-        {"time": s.time, "enabled": s.is_enabled}
-        for s in user.schedules
-    ]
+    schedules = [{"time": s.time, "enabled": s.is_enabled} for s in user.schedules]
 
     session.close()
     return schedules

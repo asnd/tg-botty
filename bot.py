@@ -16,8 +16,7 @@ from analytics import get_user_streak, get_weekly_summary, get_mood_trend
 from config import settings
 
 logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    level=logging.INFO
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
 )
 logger = logging.getLogger(__name__)
 
@@ -52,11 +51,14 @@ def get_conversation_state(telegram_id: int) -> ConversationState:
     return state
 
 
-def update_conversation_state(telegram_id: int, question_id: int = None,
-                              session_id: str = None, state: str = None):
+def update_conversation_state(
+    telegram_id: int, question_id: int = None, session_id: str = None, state: str = None
+):
     """Update conversation state."""
     session = get_session()
-    conv_state = session.query(ConversationState).filter_by(telegram_id=telegram_id).first()
+    conv_state = (
+        session.query(ConversationState).filter_by(telegram_id=telegram_id).first()
+    )
 
     if not conv_state:
         conv_state = ConversationState(telegram_id=telegram_id)
@@ -79,13 +81,20 @@ def get_next_question(current_question_id: int = None) -> Question:
     session = get_session()
 
     if current_question_id is None:
-        question = session.query(Question).filter_by(is_active=True).order_by(Question.order).first()
+        question = (
+            session.query(Question)
+            .filter_by(is_active=True)
+            .order_by(Question.order)
+            .first()
+        )
     else:
         current_q = session.query(Question).filter_by(id=current_question_id).first()
-        question = (session.query(Question)
-                   .filter(Question.is_active, Question.order > current_q.order)
-                   .order_by(Question.order)
-                   .first())
+        question = (
+            session.query(Question)
+            .filter(Question.is_active, Question.order > current_q.order)
+            .order_by(Question.order)
+            .first()
+        )
 
     session.close()
     return question
@@ -93,20 +102,30 @@ def get_next_question(current_question_id: int = None) -> Question:
 
 def get_question_options(question: Question) -> InlineKeyboardMarkup:
     """Generate inline keyboard buttons for question."""
-    q_data = next((q for q in QUESTION_BANK if q["question_text"] == question.question_text), None)
+    q_data = next(
+        (q for q in QUESTION_BANK if q["question_text"] == question.question_text), None
+    )
 
     if not q_data or "options" not in q_data:
         # Default yes/no buttons
         keyboard = [
-            [InlineKeyboardButton("Yes ✅", callback_data=f"answer_yes_{question.id}"),
-             InlineKeyboardButton("No ❌", callback_data=f"answer_no_{question.id}")]
+            [
+                InlineKeyboardButton(
+                    "Yes ✅", callback_data=f"answer_yes_{question.id}"
+                ),
+                InlineKeyboardButton("No ❌", callback_data=f"answer_no_{question.id}"),
+            ]
         ]
     else:
         # Custom options
         keyboard = []
         row = []
         for option in q_data["options"]:
-            row.append(InlineKeyboardButton(option, callback_data=f"answer_{option}_{question.id}"))
+            row.append(
+                InlineKeyboardButton(
+                    option, callback_data=f"answer_{option}_{question.id}"
+                )
+            )
             if len(row) == 2:
                 keyboard.append(row)
                 row = []
@@ -114,7 +133,9 @@ def get_question_options(question: Question) -> InlineKeyboardMarkup:
             keyboard.append(row)
 
     # Add skip button
-    keyboard.append([InlineKeyboardButton("Skip ⏭️", callback_data=f"skip_{question.id}")])
+    keyboard.append(
+        [InlineKeyboardButton("Skip ⏭️", callback_data=f"skip_{question.id}")]
+    )
 
     return InlineKeyboardMarkup(keyboard)
 
@@ -180,7 +201,9 @@ async def journal_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = get_or_create_user(telegram_id, username)
 
     if not user.is_active:
-        await update.message.reply_text("Your account is inactive. Please contact support.")
+        await update.message.reply_text(
+            "Your account is inactive. Please contact support."
+        )
         return
 
     # Generate new session ID
@@ -190,7 +213,9 @@ async def journal_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     first_question = get_next_question()
 
     if not first_question:
-        await update.message.reply_text("No questions available. Please contact support.")
+        await update.message.reply_text(
+            "No questions available. Please contact support."
+        )
         return
 
     # Update conversation state
@@ -202,14 +227,14 @@ async def journal_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "mood": "😊",
         "gratitude": "🙏",
         "productivity": "🎯",
-        "self_care": "💚"
+        "self_care": "💚",
     }
     emoji = category_emoji.get(first_question.category, "📝")
 
     await update.message.reply_text(
         f"{emoji} *{first_question.category.replace('_', ' ').title()}*\n\n{first_question.question_text}",
         reply_markup=keyboard,
-        parse_mode="Markdown"
+        parse_mode="Markdown",
     )
 
 
@@ -222,7 +247,9 @@ async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_obj = session.query(User).filter_by(telegram_id=telegram_id).first()
 
     if not user_obj:
-        await update.message.reply_text("No data available yet. Complete your first journal session!")
+        await update.message.reply_text(
+            "No data available yet. Complete your first journal session!"
+        )
         session.close()
         return
 
@@ -252,32 +279,48 @@ async def schedule_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle /schedule command - manage notification times."""
     keyboard = [
         [InlineKeyboardButton("⏰ Morning (9:00 AM)", callback_data="schedule_09:00")],
-        [InlineKeyboardButton("🌅 Afternoon (2:00 PM)", callback_data="schedule_14:00")],
+        [
+            InlineKeyboardButton(
+                "🌅 Afternoon (2:00 PM)", callback_data="schedule_14:00"
+            )
+        ],
         [InlineKeyboardButton("🌙 Evening (8:00 PM)", callback_data="schedule_20:00")],
         [InlineKeyboardButton("⚙️ Custom times", callback_data="schedule_custom")],
-        [InlineKeyboardButton("📋 View current schedule", callback_data="schedule_view")],
+        [
+            InlineKeyboardButton(
+                "📋 View current schedule", callback_data="schedule_view"
+            )
+        ],
     ]
 
     await update.message.reply_text(
         "⏰ *Schedule Your Journaling Times*\n\nWhen would you like to receive journaling prompts?",
         reply_markup=InlineKeyboardMarkup(keyboard),
-        parse_mode="Markdown"
+        parse_mode="Markdown",
     )
 
 
 async def settings_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle /settings command."""
     keyboard = [
-        [InlineKeyboardButton("⏰ Notification Schedule", callback_data="settings_schedule")],
+        [
+            InlineKeyboardButton(
+                "⏰ Notification Schedule", callback_data="settings_schedule"
+            )
+        ],
         [InlineKeyboardButton("🌍 Timezone", callback_data="settings_timezone")],
-        [InlineKeyboardButton("🔔 Enable/Disable Notifications", callback_data="settings_toggle")],
+        [
+            InlineKeyboardButton(
+                "🔔 Enable/Disable Notifications", callback_data="settings_toggle"
+            )
+        ],
         [InlineKeyboardButton("🗑️ Clear My Data", callback_data="settings_clear")],
     ]
 
     await update.message.reply_text(
         "⚙️ *Settings*\n\nWhat would you like to configure?",
         reply_markup=InlineKeyboardMarkup(keyboard),
-        parse_mode="Markdown"
+        parse_mode="Markdown",
     )
 
 
@@ -317,10 +360,14 @@ async def handle_answer_callback(query, telegram_id: int, callback_data: str):
         answer = "_".join(parts[1:-1])
 
     # Get conversation state
-    conv_state = session.query(ConversationState).filter_by(telegram_id=telegram_id).first()
+    conv_state = (
+        session.query(ConversationState).filter_by(telegram_id=telegram_id).first()
+    )
 
     if not conv_state or conv_state.state != "journaling":
-        await query.edit_message_text("Session expired. Use /journal to start a new session.")
+        await query.edit_message_text(
+            "Session expired. Use /journal to start a new session."
+        )
         session.close()
         return
 
@@ -331,7 +378,7 @@ async def handle_answer_callback(query, telegram_id: int, callback_data: str):
             user_id=user.id,
             question_id=question_id,
             answer=answer,
-            session_id=conv_state.session_id
+            session_id=conv_state.session_id,
         )
         session.add(response)
         session.commit()
@@ -350,14 +397,14 @@ async def handle_answer_callback(query, telegram_id: int, callback_data: str):
             "mood": "😊",
             "gratitude": "🙏",
             "productivity": "🎯",
-            "self_care": "💚"
+            "self_care": "💚",
         }
         emoji = category_emoji.get(next_question.category, "📝")
 
         await query.edit_message_text(
             f"{emoji} *{next_question.category.replace('_', ' ').title()}*\n\n{next_question.question_text}",
             reply_markup=keyboard,
-            parse_mode="Markdown"
+            parse_mode="Markdown",
         )
     else:
         # Session complete
@@ -391,7 +438,9 @@ async def handle_schedule_callback(query, telegram_id: int, callback_data: str):
             message = "You don't have any scheduled times yet."
         else:
             times = [s.time for s in schedules if s.is_enabled]
-            message = "⏰ Your scheduled times:\n" + "\n".join([f"• {t}" for t in times])
+            message = "⏰ Your scheduled times:\n" + "\n".join(
+                [f"• {t}" for t in times]
+            )
 
         session.close()
         await query.edit_message_text(message)
@@ -401,13 +450,15 @@ async def handle_schedule_callback(query, telegram_id: int, callback_data: str):
             "⚙️ *Custom Schedule*\n\n"
             "Send me your preferred times in 24-hour format (HH:MM), separated by commas.\n\n"
             "Example: `09:00, 14:30, 20:00`",
-            parse_mode="Markdown"
+            parse_mode="Markdown",
         )
 
     else:
         time = callback_data.split("_")[1]
         add_user_schedule(telegram_id, [time])
-        await query.edit_message_text(f"✅ Schedule set for {time}. You'll receive prompts at this time daily!")
+        await query.edit_message_text(
+            f"✅ Schedule set for {time}. You'll receive prompts at this time daily!"
+        )
 
 
 async def handle_settings_callback(query, telegram_id: int, callback_data: str):
@@ -425,25 +476,31 @@ async def handle_settings_callback(query, telegram_id: int, callback_data: str):
 
     elif callback_data == "settings_schedule":
         session.close()
-        await query.edit_message_text("Use /schedule to manage your notification times.")
+        await query.edit_message_text(
+            "Use /schedule to manage your notification times."
+        )
 
     elif callback_data == "settings_timezone":
         await query.edit_message_text(
             "🌍 *Timezone Settings*\n\n"
             "Send me your timezone (e.g., America/New_York, Europe/London, Asia/Tokyo)",
-            parse_mode="Markdown"
+            parse_mode="Markdown",
         )
         session.close()
 
     elif callback_data == "settings_clear":
         keyboard = [
-            [InlineKeyboardButton("Yes, delete everything", callback_data="confirm_clear_yes")],
+            [
+                InlineKeyboardButton(
+                    "Yes, delete everything", callback_data="confirm_clear_yes"
+                )
+            ],
             [InlineKeyboardButton("No, cancel", callback_data="confirm_clear_no")],
         ]
         await query.edit_message_text(
             "⚠️ *Warning*\n\nThis will delete all your data including responses and stats. Are you sure?",
             reply_markup=InlineKeyboardMarkup(keyboard),
-            parse_mode="Markdown"
+            parse_mode="Markdown",
         )
         session.close()
 
@@ -452,7 +509,9 @@ async def handle_settings_callback(query, telegram_id: int, callback_data: str):
             session.delete(user)
             session.commit()
         session.close()
-        await query.edit_message_text("✅ Your data has been cleared. Use /start to begin again.")
+        await query.edit_message_text(
+            "✅ Your data has been cleared. Use /start to begin again."
+        )
 
     elif callback_data == "confirm_clear_no":
         session.close()

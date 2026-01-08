@@ -1,6 +1,14 @@
 from datetime import datetime
 from typing import Optional
-from sqlalchemy import String, Integer, Boolean, DateTime, ForeignKey, Text, create_engine
+from sqlalchemy import (
+    String,
+    Integer,
+    Boolean,
+    DateTime,
+    ForeignKey,
+    Text,
+    create_engine,
+)
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship, Session
 from config import settings
 
@@ -20,8 +28,12 @@ class User(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     # Relationships
-    schedules: Mapped[list["Schedule"]] = relationship(back_populates="user", cascade="all, delete-orphan")
-    responses: Mapped[list["Response"]] = relationship(back_populates="user", cascade="all, delete-orphan")
+    schedules: Mapped[list["Schedule"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
+    responses: Mapped[list["Response"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
 
     def __repr__(self):
         return f"<User(telegram_id={self.telegram_id}, username={self.username})>"
@@ -47,9 +59,13 @@ class Question(Base):
     __tablename__ = "questions"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    category: Mapped[str] = mapped_column(String(50))  # mood, gratitude, productivity, self_care
+    category: Mapped[str] = mapped_column(
+        String(50)
+    )  # mood, gratitude, productivity, self_care
     question_text: Mapped[str] = mapped_column(Text)
-    response_type: Mapped[str] = mapped_column(String(20), default="yes_no")  # yes_no, scale, text
+    response_type: Mapped[str] = mapped_column(
+        String(20), default="yes_no"
+    )  # yes_no, scale, text
     order: Mapped[int] = mapped_column(Integer, default=0)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
 
@@ -57,7 +73,9 @@ class Question(Base):
     responses: Mapped[list["Response"]] = relationship(back_populates="question")
 
     def __repr__(self):
-        return f"<Question(category={self.category}, question={self.question_text[:30]})>"
+        return (
+            f"<Question(category={self.category}, question={self.question_text[:30]})>"
+        )
 
 
 class Response(Base):
@@ -68,7 +86,9 @@ class Response(Base):
     question_id: Mapped[int] = mapped_column(ForeignKey("questions.id"))
     answer: Mapped[str] = mapped_column(Text)
     responded_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
-    session_id: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)  # Group responses from same session
+    session_id: Mapped[Optional[str]] = mapped_column(
+        String(50), nullable=True
+    )  # Group responses from same session
 
     # Relationships
     user: Mapped["User"] = relationship(back_populates="responses")
@@ -85,11 +105,17 @@ class ConversationState(Base):
     telegram_id: Mapped[int] = mapped_column(Integer, unique=True, index=True)
     current_question_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     session_id: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
-    state: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)  # journaling, settings, etc
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    state: Mapped[Optional[str]] = mapped_column(
+        String(50), nullable=True
+    )  # journaling, settings, etc
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
+    )
 
     def __repr__(self):
-        return f"<ConversationState(telegram_id={self.telegram_id}, state={self.state})>"
+        return (
+            f"<ConversationState(telegram_id={self.telegram_id}, state={self.state})>"
+        )
 
 
 # Database initialization
