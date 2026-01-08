@@ -9,8 +9,6 @@ from telegram.ext import (
     CommandHandler,
     CallbackQueryHandler,
     ContextTypes,
-    MessageHandler,
-    filters
 )
 from models import User, Question, Response, ConversationState, get_session
 from questions import QUESTION_BANK, init_questions
@@ -85,7 +83,7 @@ def get_next_question(current_question_id: int = None) -> Question:
     else:
         current_q = session.query(Question).filter_by(id=current_question_id).first()
         question = (session.query(Question)
-                   .filter(Question.is_active == True, Question.order > current_q.order)
+                   .filter(Question.is_active, Question.order > current_q.order)
                    .order_by(Question.order)
                    .first())
 
@@ -127,7 +125,7 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     telegram_id = update.effective_user.id
     username = update.effective_user.username
 
-    user = get_or_create_user(telegram_id, username)
+    get_or_create_user(telegram_id, username)
 
     welcome_message = (
         "🌟 *Welcome to Your Journaling Bot!* 🌟\n\n"
@@ -218,7 +216,7 @@ async def journal_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle /stats command - show user statistics."""
     telegram_id = update.effective_user.id
-    user = get_or_create_user(telegram_id, update.effective_user.username)
+    get_or_create_user(telegram_id, update.effective_user.username)
 
     session = get_session()
     user_obj = session.query(User).filter_by(telegram_id=telegram_id).first()
@@ -393,7 +391,7 @@ async def handle_schedule_callback(query, telegram_id: int, callback_data: str):
             message = "You don't have any scheduled times yet."
         else:
             times = [s.time for s in schedules if s.is_enabled]
-            message = f"⏰ Your scheduled times:\n" + "\n".join([f"• {t}" for t in times])
+            message = "⏰ Your scheduled times:\n" + "\n".join([f"• {t}" for t in times])
 
         session.close()
         await query.edit_message_text(message)

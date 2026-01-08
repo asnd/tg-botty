@@ -1,14 +1,12 @@
 """Scheduler for periodic journaling prompts."""
 
 import logging
-from datetime import datetime, time
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 import pytz
 from telegram import Bot
 from telegram.error import TelegramError
 from models import User, Schedule, get_session
-from config import settings
 
 logger = logging.getLogger(__name__)
 
