@@ -1,0 +1,15 @@
+[Unit]
+Description=Telegram Journaling Bot
+After=network.target
+
+[Service]
+Type=simple
+User=your-username
+WorkingDirectory=/path/to/tg-botty
+Environment="PATH=/path/to/tg-botty/venv/bin"
+ExecStart=/path/to/tg-botty/venv/bin/python bot.py
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
